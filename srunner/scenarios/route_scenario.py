@@ -142,7 +142,7 @@ class RouteScenario(BasicScenario):
     along which several smaller scenarios are triggered
     """
 
-    def __init__(self, world, config, debug_mode=False, criteria_enable=True, timeout=300):
+    def __init__(self, world, config, debug_mode=False, criteria_enable=True, timeout=300, tm=None):
         """
         Setup all relevant parameters and create scenarios along route
         """
@@ -150,10 +150,13 @@ class RouteScenario(BasicScenario):
         self.config = config
         self.route = None
         self.sampled_scenarios_definitions = None
+        self.tm = tm
 
         self._update_route(world, config, debug_mode)
 
         ego_vehicle = self._update_ego_vehicle()
+        self.tm.vehicle_percentage_speed_difference(ego_vehicle, -90)
+        # ego_vehicle.set_target_velocity(carla.Vector3D(10,10,10))
 
         self.list_scenarios = self._build_scenario_instances(world,
                                                              ego_vehicle,
@@ -161,6 +164,7 @@ class RouteScenario(BasicScenario):
                                                              scenarios_per_tick=5,
                                                              timeout=self.timeout,
                                                              debug_mode=debug_mode)
+        
 
         super(RouteScenario, self).__init__(name=config.name,
                                             ego_vehicles=[ego_vehicle],
@@ -213,6 +217,8 @@ class RouteScenario(BasicScenario):
         ego_vehicle = CarlaDataProvider.request_new_actor('vehicle.lincoln.mkz2017',
                                                           elevate_transform,
                                                           rolename='hero')
+        # self.tm.vehicle_percentage_speed_difference(ego_vehicle, -100)
+        # self.tm.global_percentage_speed_difference(-100)
 
         return ego_vehicle
 

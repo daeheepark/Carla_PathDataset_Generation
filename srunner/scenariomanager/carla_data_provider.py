@@ -422,8 +422,8 @@ class CarlaDataProvider(object):  # pylint: disable=too-many-public-methods
             'trailer': '',
             'semitrailer': '',
             'bus': 'vehicle.volkswagen.t2',
-            'motorbike': 'vehicle.kawasaki.ninja',
-            'bicycle': 'vehicle.diamondback.century',
+            # 'motorbike': 'vehicle.kawasaki.ninja',
+            # 'bicycle': 'vehicle.diamondback.century',
             'train': '',
             'tram': '',
             'pedestrian': 'walker.pedestrian.0001',
@@ -550,6 +550,7 @@ class CarlaDataProvider(object):  # pylint: disable=too-many-public-methods
 
         CarlaDataProvider._carla_actor_pool[actor.id] = actor
         CarlaDataProvider.register_actor(actor)
+        
         return actor
 
     @staticmethod
@@ -658,7 +659,7 @@ class CarlaDataProvider(object):  # pylint: disable=too-many-public-methods
                     print("The amount of spawn points is lower than the amount of vehicles spawned")
                     break
 
-            if spawn_point:
+            if spawn_point and (int(blueprint.get_attribute('number_of_wheels')) != 2):
                 batch.append(SpawnActor(blueprint, spawn_point).then(
                     SetAutopilot(FutureActor, autopilot,
                                  CarlaDataProvider._traffic_manager_port)))

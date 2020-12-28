@@ -30,6 +30,9 @@ from srunner.scenariomanager.utils_pdh import *
 from collections import deque, defaultdict
 
 CROP = 224
+Sampling_Intv = 10
+PAST_LEN = 4
+FUTURE_LEN = 6
 
 class ScenarioManager(object):
 
@@ -146,9 +149,11 @@ class ScenarioManager(object):
         actor_list = world.get_actors().filter('vehicle.*')
         # pasts_and_futures = {'ego': defaultdict(deque), 'background' : defaultdict(deque)}
         pasts_and_futures = defaultdict(defaultdict)
+        pasts_and_futures['past_length'] = PAST_LEN
+        pasts_and_futures['future_length'] = FUTURE_LEN
         for actor in actor_list:
-            pasts_and_futures['pasts'][actor.id] = deque(4*[0,0], maxlen=4)
-            pasts_and_futures['futures'][actor.id] = deque(6*[0,0], maxlen=6)
+            pasts_and_futures['pasts'][actor.id] = deque(PAST_LEN*[0,0], maxlen=PAST_LEN)
+            pasts_and_futures['futures'][actor.id] = deque(FUTURE_LEN*[0,0], maxlen=FUTURE_LEN)
             
         start_frame = world.get_snapshot().frame
 
@@ -172,9 +177,9 @@ class ScenarioManager(object):
             hero_transform = snapshot.find(CarlaDataProvider.get_hero_actor().id).get_transform()
             
             left_or_right_decision = 0
-            if (timestamp.frame - start_frame) % 5 ==0:
+            if (timestamp.frame - start_frame) % Sampling_Intv == 0:
                 left_or_right_1 = (hero_transform.location.x, hero_transform.location.x, hero_transform.rotation.yaw)
-            if (timestamp.frame - start_frame) % 5 ==4: 
+            if (timestamp.frame - start_frame) % Sampling_Intv == (Sampling_Intv-1): 
                 left_or_right_5 = (hero_transform.location.x, hero_transform.location.x, hero_transform.rotation.yaw)
                 delta_x = left_or_right_5[0] - left_or_right_1[0]
                 delta_y = left_or_right_5[1] - left_or_right_1[1]
@@ -189,7 +194,8 @@ class ScenarioManager(object):
                 else:
                     left_or_right_decision = 0
 
-            current_df = get_df(self.scenario.name, self.town, world, pasts_and_futures, start_frame, timestamp, hero_transform, map_img, _world_offset, left_or_right_decision)
+            current_df = get_df(self.scenario.name, self.town, world, pasts_and_futures, start_frame, timestamp, hero_transform, 
+            map_img, _world_offset, left_or_right_decision, Sampling_Intv)
             if timestamp:
                 self._tick_scenario(timestamp)
 

@@ -89,6 +89,7 @@ class ScenarioRunner(object):
         self.client.set_timeout(self.client_timeout)
 
         self.traffic_manager = self.client.get_trafficmanager(int(self._args.trafficManagerPort))
+        self.traffic_manager.global_percentage_speed_difference(-20)
 
         dist = pkg_resources.get_distribution("carla")
         if LooseVersion(dist.version) < LooseVersion('0.9.8'):
@@ -227,6 +228,8 @@ class ScenarioRunner(object):
                 self.ego_vehicles[i].set_transform(ego_vehicles[i].transform)
                 CarlaDataProvider.register_actor(self.ego_vehicles[i])
 
+        # self.traffic_manager.vehicle_percentage_speed_difference(-70)
+
         # sync state
         if CarlaDataProvider.is_sync_mode():
             self.world.tick()
@@ -319,6 +322,10 @@ class ScenarioRunner(object):
 
         self.world = self.client.get_world()
 
+        for speed_sign in self.world.get_actors().filter('traffic.speed_limit.*'):
+            if speed_sign.type_id == 'traffic.speed_limit.30':
+                speed_sign.destroy()
+
         if self._args.sync:
             settings = self.world.get_settings()
             settings.synchronous_mode = True
@@ -331,6 +338,7 @@ class ScenarioRunner(object):
         CarlaDataProvider.set_client(self.client)
         CarlaDataProvider.set_world(self.world)
         CarlaDataProvider.set_traffic_manager_port(int(self._args.trafficManagerPort))
+
 
         # Wait for the world to be ready
         if CarlaDataProvider.is_sync_mode():
@@ -377,7 +385,8 @@ class ScenarioRunner(object):
             elif self._args.route:
                 scenario = RouteScenario(world=self.world,
                                          config=config,
-                                         debug_mode=self._args.debug)
+                                         debug_mode=self._args.debug,
+                                         tm=self.traffic_manager)
             else:
                 scenario_class = self._get_scenario_class_or_fail(config.type)
                 scenario = scenario_class(self.world,
@@ -552,7 +561,7 @@ def main():
     parser.add_argument('--repetitions', default=1, type=int, help='Number of scenario executions')
     parser.add_argument('--waitForEgo', action="store_true", help='Connect the scenario to an existing ego vehicle')
 
-    arguments = parser.parse_args("--record ./path --route ./srunner/data/routes_training.xml ./srunner/data/all_towns_traffic_scenarios.json --agent ./srunner/autoagents/npc_agent.py --output --timeout 1000000".split())
+    arguments = parser.parse_args("--record ./path --route ./srunner/data/routes_training.xml ./srunner/data/all_towns_traffic_scenarios.json --agent ./srunner/autoagents/npc_agent.py --output --timeout 1000000000".split())
     # arguments = parser.parse_args()
     # pylint: enable=line-too-long
 
